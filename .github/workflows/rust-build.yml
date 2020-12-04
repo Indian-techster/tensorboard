@@ -1,0 +1,36 @@
+# Automated Rust binary builds for //tensorboard/data/server.
+#
+# YAML schema for GitHub Actions:
+# https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions
+#
+# Helpful YAML parser to clarify YAML syntax:
+# https://yaml-online-parser.appspot.com/
+
+name: Rust binary build
+
+on:
+  push:
+    branches:
+      - 'wchargin-rust-build*' # manually triggered by pushing to a special branch  # DO NOT SUBMIT: remove wcharginism
+
+jobs:
+  build-rust:
+    runs-on: ${{ matrix.platform }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: ['ubuntu-16.04', 'macos-11.0']
+        rust_version: ['1.48.0']
+    steps:
+      - uses: actions/checkout@v1
+      - name: 'Install Rust toolchain'
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust_version }}
+      - name: 'Build'
+        run: cd tensorboard/data/server/ && cargo build --release
+      - name: 'Upload'
+        uses: actions/upload-artifact@v2
+        with:
+          name: rustboard-${{ matrix.platform }}
+          path: tensorboard/data/server/target/release/rustboard
